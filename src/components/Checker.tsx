@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Combobox } from "./Combobox";
+import { PopularGames } from "./PopularGames";
 import { RigForm } from "./RigForm";
 import { Verdict } from "./Verdict";
 import { estimate } from "@/lib/estimate";
@@ -24,7 +25,7 @@ async function fetchGames(q: string): Promise<GameSearchResult[]> {
   return res.ok ? res.json() : [];
 }
 
-export function Checker() {
+export function Checker({ popular }: { popular: GameSearchResult[] }) {
   const [rig, setRig] = useState<Rig>(EMPTY_RIG);
   const [picked, setPicked] = useState<GameSearchResult | null>(null);
   const [game, setGame] = useState<GameDetails | null>(null);
@@ -79,6 +80,16 @@ export function Checker() {
   const gameLabel = useCallback((g: GameSearchResult) => g.name, []);
   const rigReady = rig.gpuId && rig.cpuId;
 
+  const resultRef = useRef<HTMLDivElement>(null);
+  const pickGame = (g: GameSearchResult) => {
+    if (g.appid !== picked?.appid) setGame(null);
+    setPicked(g);
+    // Picking from the list under a verdict leaves you scrolled down; bring the result into view.
+    const box = resultRef.current;
+    if (box && box.getBoundingClientRect().top < 0) box.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+  const otherPopular = popular.filter((g) => g.appid !== game?.appid);
+
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] lg:items-start">
       <div className="space-y-6 lg:sticky lg:top-6">
@@ -96,10 +107,7 @@ export function Checker() {
             getLabel={gameLabel}
             search={fetchGames}
             delay={250}
-            onSelect={(g) => {
-              if (g.appid !== picked?.appid) setGame(null);
-              setPicked(g);
-            }}
+            onSelect={pickGame}
             emptyText="No games found."
             renderItem={(g) => (
               <span className="flex items-center gap-3">
@@ -121,18 +129,23 @@ export function Checker() {
         </div>
       </div>
 
-      <div className="min-w-0">
+      <div ref={resultRef} className="min-w-0 scroll-mt-6 space-y-8">
         {error ? (
           <Placeholder>{error}</Placeholder>
         ) : loading ? (
           <div className="h-80 animate-pulse rounded-2xl border border-border bg-surface" aria-label="Loading game" />
         ) : !game ? (
-          <Placeholder>Search for a game to see how it runs on your PC.</Placeholder>
+          popular.length > 0 ? (
+            <PopularGames games={popular} onPick={pickGame} />
+          ) : (
+            <Placeholder>Search for a game to see how it runs on your PC.</Placeholder>
+          )
         ) : !rigReady ? (
           <Placeholder>Add your graphics card and processor to get a verdict for {game.name}.</Placeholder>
         ) : result ? (
           <Verdict key={`${game.appid}-${rig.gpuId}-${rig.cpuId}`} game={game} estimate={result} />
         ) : null}
+        {game && !loading && <PopularGames games={otherPopular} onPick={pickGame} compact />}
       </div>
     </div>
   );

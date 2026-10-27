@@ -15,6 +15,27 @@ export async function searchGames(term: string): Promise<GameSearchResult[]> {
     .map((item) => ({ appid: item.id, name: item.name, image: item.tiny_image }));
 }
 
+// Steam's chart includes tools like Wallpaper Engine; these genres mark non-games.
+const SOFTWARE_GENRES = new Set([
+  "Utilities", "Animation & Modeling", "Design & Illustration", "Video Production",
+  "Audio Production", "Photo Editing", "Software Training", "Web Publishing", "Game Development",
+]);
+
+/** Most played games on Steam right now, by daily peak players. */
+export async function getPopularGames(limit = 12): Promise<GameSearchResult[]> {
+  const res = await fetch("https://api.steampowered.com/ISteamChartsService/GetMostPlayedGames/v1/", {
+    next: { revalidate: 60 * 60 },
+  });
+  if (!res.ok) return [];
+  const json: { response?: { ranks?: { appid: number }[] } } = await res.json();
+  const appids = (json.response?.ranks ?? []).slice(0, limit + 8).map((r) => r.appid);
+  const games = await Promise.all(appids.map((id) => getGame(id).catch(() => null)));
+  return games
+    .filter((g): g is GameDetails => !!g && !g.genres.some((genre) => SOFTWARE_GENRES.has(genre)))
+    .slice(0, limit)
+    .map((g) => ({ appid: g.appid, name: g.name, image: g.headerImage }));
+}
+
 interface SteamApp {
   name: string;
   header_image: string;

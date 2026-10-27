@@ -89,9 +89,14 @@ export function searchParts<T extends Gpu | Cpu>(items: T[], query: string, limi
   const hits = items
     .map((item) => ({ item, words: tokenize(item.name) }))
     .filter(({ words }) => covers(words, required))
-    // Parts matching every typed word (memory size included) come first, then fastest first.
-    .map(({ item, words }) => ({ item, exact: covers(words, full) }))
-    .sort((a, b) => Number(b.exact) - Number(a.exact) || b.item.score - a.item.score);
+    // Rank parts matching every typed word (memory size included) first, then parts with no
+    // extra suffix ("5600" before "5600X3D"), then fastest first.
+    .map(({ item, words }) => ({
+      item,
+      rank: Number(covers(words, full)) * 2 + Number(required.every((part) => words.includes(part))),
+      length: words.length,
+    }))
+    .sort((a, b) => b.rank - a.rank || a.length - b.length || b.item.score - a.item.score);
   return hits.slice(0, limit).map((h) => h.item);
 }
 

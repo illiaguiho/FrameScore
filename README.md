@@ -12,8 +12,8 @@ npm run dev
 Then open http://localhost:3000.
 
 ## How it works (current build)
-- `src/data/gpus.ts`, `src/data/cpus.ts`: hand-tuned relative performance scores for ~350 parts (GTX 1060 = 100, i5-4590 = 100).
-- `src/lib/steam.ts`: game search and details from Steam's public store API (no key needed), cached for a day.
+- `src/data/gpus.ts`, `src/data/cpus.ts`: hand-tuned relative performance scores for ~640 parts: 332 GPUs and 311 CPUs (GTX 1060 = 100, i5-4590 = 100).
+- `src/lib/steam.ts`: game search and details from Steam's public store API (no key needed), cached for a day. The "most played" grid comes from Steam's charts, refreshed hourly; it can switch to FrameScore's own most-searched games once searches are stored.
 - `src/lib/requirements.ts`: turns Steam's requirement HTML into structured parts, RAM, VRAM and storage; falls back to rough guesses for vague text like "2 GB DirectX 11 card".
 - `src/lib/estimate.ts`: compares your parts to the requirements and produces the tier, fps range, bottleneck, advice and upgrade suggestion.
 - Your hardware is saved in the browser (localStorage). There is no database yet; Supabase comes in once we need caching, accounts or the Steam library import.

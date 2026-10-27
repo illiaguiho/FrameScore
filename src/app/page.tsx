@@ -1,7 +1,13 @@
 import { BlackToggle } from "@/components/BlackToggle";
 import { Checker } from "@/components/Checker";
+import { getPopularGames } from "@/lib/steam";
 
-export default function Home() {
+// Rebuild the page at most hourly so the popular list stays fresh.
+export const revalidate = 3600;
+
+export default async function Home() {
+  const popular = await getPopularGames().catch(() => []);
+
   return (
     <div className="mx-auto min-h-dvh max-w-6xl px-4 pb-16 sm:px-6">
       <header className="flex items-center justify-between py-5">
@@ -20,7 +26,7 @@ export default function Home() {
         </p>
       </div>
 
-      <Checker />
+      <Checker popular={popular} />
     </div>
   );
 }
