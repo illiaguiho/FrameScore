@@ -62,12 +62,6 @@ Existing tools (Can You Run It, PCGameBenchmark) mostly give a pass/fail against
 
 **Estimation approach:** start simple: compare the user's part scores to the game's recommended-spec scores to pick a tier. Refine over time with real benchmark data.
 
-## Design
-- Near-black dark theme (around `#0a0a0a`) by default, with an optional true-black (`#000`) mode for OLED screens.
-- Clean, minimal UX: search → hardware → verdict in as few steps as possible.
-- Responsive (mobile-first) with smooth, subtle transitions.
-- The verdict should be readable at a glance: big tier label, then details below.
-
 ## Open questions
 - Domain for the FrameScore name
 - Hosting (Vercel is the natural fit for Next.js)
