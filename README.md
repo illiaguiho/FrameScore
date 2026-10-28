@@ -16,6 +16,8 @@ Then open http://localhost:3000.
 - `src/lib/steam.ts`: game search and details from Steam's public store API (no key needed), cached for a day. The "most played" grid comes from Steam's charts, refreshed hourly; it can switch to FrameScore's own most-searched games once searches are stored.
 - `src/lib/requirements.ts`: turns Steam's requirement HTML into structured parts, RAM, VRAM and storage; falls back to rough guesses for vague text like "2 GB DirectX 11 card".
 - `src/lib/estimate.ts`: compares your parts to the requirements and produces the tier, fps range, bottleneck, advice and upgrade suggestion.
+- `src/data/frameCaps.ts`: hand-maintained list of games locked to a frame rate (e.g. Elden Ring at 60), so estimates never promise more.
+- Similar games: when a game won't run (or only struggles on Low), the app reads Steam's "More like this" list and shows the ones that run clearly better on your PC. Steam has no API for this, so it reads the store page and hides the section if that ever fails.
 - Your hardware is saved in the browser (localStorage). There is no database yet; Supabase comes in once we need caching, accounts or the Steam library import.
 
 ## Tech stack

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Combobox } from "./Combobox";
 import { PopularGames } from "./PopularGames";
 import { RigForm } from "./RigForm";
+import { SimilarGames } from "./SimilarGames";
 import { Verdict } from "./Verdict";
 import { estimate } from "@/lib/estimate";
 import type { GameDetails, GameSearchResult, Rig } from "@/lib/types";
@@ -145,6 +146,9 @@ export function Checker({ popular }: { popular: GameSearchResult[] }) {
         ) : result ? (
           <Verdict key={`${game.appid}-${rig.gpuId}-${rig.cpuId}`} game={game} estimate={result} />
         ) : null}
+        {game && result && rigReady && (result.tier === "none" || (result.tier === "low" && !result.smooth)) && (
+          <SimilarGames game={game} current={result} rig={rig} onPick={pickGame} />
+        )}
         {game && !loading && <PopularGames games={otherPopular} onPick={pickGame} compact />}
       </div>
     </div>

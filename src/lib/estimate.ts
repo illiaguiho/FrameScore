@@ -1,3 +1,4 @@
+import { FRAME_CAPS } from "@/data/frameCaps";
 import { CPUS, GPUS, cpuById, gpuById, type Cpu, type Gpu } from "./hardware";
 import type { GameDetails, Requirements, Rig } from "./types";
 
@@ -17,6 +18,7 @@ export interface Estimate {
   tier: Tier;
   smooth: boolean;
   fps: { low: number; high: number } | null;
+  fpsCap: number | null; // set when the game locks its frame rate
   bottleneck: "gpu" | "cpu" | "balanced" | null;
   confidence: "high" | "medium" | "low";
   checks: Check[];
@@ -95,13 +97,17 @@ export function estimate(game: GameDetails, rig: Rig): Estimate | null {
     });
   }
 
+  const cap = FRAME_CAPS[game.appid] ?? null;
+
   if (!g && !c) {
-    return { tier: "unknown", smooth: false, fps: null, bottleneck: null, confidence: "low", checks, advice: [], upgrade: null, notes };
+    return { tier: "unknown", smooth: false, fps: null, fpsCap: cap, bottleneck: null, confidence: "low", checks, advice: [], upgrade: null, notes };
   }
 
   const gpuFps = (p: Preset) => (g ? (BASE_FPS * gpu.score) / (g.rec * COST[p]) : Infinity);
   const cpuFps = c ? cpuFpsFor(cpu.score, c.rec) : Infinity;
-  const fpsAt = (p: Preset) => Math.min(gpuFps(p), cpuFps);
+  const fpsAt = (p: Preset) => Math.min(gpuFps(p), cpuFps, cap ?? Infinity);
+  // A game locked to 30 fps counts as smooth when it holds its lock.
+  const smoothAt = cap ? Math.min(SMOOTH, cap * 0.9) : SMOOTH;
 
   const farBelow =
     (g && gpu.score < g.min * 0.6) || (c && cpu.score < c.min * 0.5) || (ram.min && rig.ramGb < ram.min * 0.5);
@@ -110,7 +116,7 @@ export function estimate(game: GameDetails, rig: Rig): Estimate | null {
   let smooth = false;
   if (!farBelow) {
     // Highest preset that stays smooth; otherwise Low, which gives the best frame rate.
-    const smoothPreset = PRESETS.find((p) => fpsAt(p) >= SMOOTH);
+    const smoothPreset = PRESETS.find((p) => fpsAt(p) >= smoothAt);
     if (smoothPreset) [tier, smooth] = [smoothPreset, true];
     else if (fpsAt("low") >= 20) tier = "low";
   }
@@ -119,10 +125,16 @@ export function estimate(game: GameDetails, rig: Rig): Estimate | null {
 
   const preset: Preset = tier === "none" ? "low" : tier;
   const est = Math.min(fpsAt(preset), 240);
-  const fps = isFinite(est) ? { low: round5(est * 0.85), high: round5(est * 1.15) } : null;
+  const top = cap ?? Infinity;
+  const fps = isFinite(est)
+    ? { low: Math.min(round5(est * 0.85), top), high: Math.min(round5(est * 1.15), top) }
+    : null;
 
   const gf = gpuFps(preset);
-  const bottleneck = !g || !c ? (g ? "gpu" : "cpu") : gf < cpuFps * 0.85 ? "gpu" : cpuFps < gf * 0.85 ? "cpu" : "balanced";
+  // Nothing holds it back when both parts could exceed the game's frame lock.
+  const bottleneck = cap && Math.min(gf, cpuFps) >= cap ? null
+    : !g || !c ? (g ? "gpu" : "cpu")
+    : gf < cpuFps * 0.85 ? "gpu" : cpuFps < gf * 0.85 ? "cpu" : "balanced";
 
   // Advice, most impactful first.
   const advice: string[] = [];
@@ -161,5 +173,5 @@ export function estimate(game: GameDetails, rig: Rig): Estimate | null {
     if (newGpu || newCpu) upgrade = { gpu: newGpu, cpu: newCpu };
   }
 
-  return { tier, smooth, fps, bottleneck, confidence, checks, advice: advice.slice(0, 5), upgrade, notes };
+  return { tier, smooth, fps, fpsCap: cap, bottleneck, confidence, checks, advice: advice.slice(0, 5), upgrade, notes };
 }

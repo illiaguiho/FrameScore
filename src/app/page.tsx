@@ -27,6 +27,16 @@ export default async function Home() {
       </div>
 
       <Checker popular={popular} />
+
+      <footer className="mt-16 border-t border-border pt-6 text-xs leading-relaxed text-muted">
+        <p>
+          FrameScore is an independent project and is not affiliated with, endorsed or sponsored by Valve Corporation or Steam.
+          Game names, images and requirements come from the Steam store and belong to their respective owners.
+        </p>
+        <p className="mt-2">
+          Performance figures are estimates based on approximate hardware scores and may differ from real results.
+        </p>
+      </footer>
     </div>
   );
 }

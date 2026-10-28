@@ -36,6 +36,31 @@ export async function getPopularGames(limit = 12): Promise<GameSearchResult[]> {
     .map((g) => ({ appid: g.appid, name: g.name, image: g.headerImage }));
 }
 
+/**
+ * Games Steam lists under "More like this". There is no API for it, so this reads the
+ * store page; if Steam changes the page, it returns an empty list instead of failing.
+ */
+export async function getSimilarGames(appid: number, limit = 16): Promise<GameDetails[]> {
+  try {
+    const res = await fetch(`https://store.steampowered.com/recommended/morelike/app/${appid}/?l=english&cc=US`, {
+      headers: { "User-Agent": "Mozilla/5.0 (FrameScore)" },
+      next: { revalidate: DAY },
+    });
+    if (!res.ok) return [];
+    const html = await res.text();
+    const ids = [...new Set([...html.matchAll(/data-ds-appid="(\d+)"/g)].map((m) => Number(m[1])))]
+      .filter((id) => id !== appid)
+      .slice(0, limit);
+    const games = await Promise.all(ids.map((id) => getGame(id).catch(() => null)));
+    return games.filter(
+      (g): g is GameDetails =>
+        !!g && (!!g.minimum || !!g.recommended) && !g.genres.some((genre) => SOFTWARE_GENRES.has(genre)),
+    );
+  } catch {
+    return [];
+  }
+}
+
 interface SteamApp {
   name: string;
   header_image: string;

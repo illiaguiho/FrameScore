@@ -21,8 +21,10 @@ const STATUS: Record<Status, { icon: string; color: string; label: string }> = {
 function summary(e: Estimate) {
   if (e.tier === "unknown") return "This game doesn't list enough requirements to estimate.";
   if (e.tier === "none") return "Your PC is well below the minimum requirements.";
+  const target = e.fpsCap && e.fpsCap < 60 ? e.fpsCap : 60;
+  if (e.smooth && e.fpsCap && e.fps?.high === e.fpsCap) return `Should hold the game's ${e.fpsCap} fps limit.`;
   if (e.smooth) return "Should run smoothly at around 60 fps or more.";
-  return e.fps && e.fps.high >= 30 ? "Playable, but don't expect a smooth 60." : "It will start, but expect heavy stutter.";
+  return e.fps && e.fps.high >= 30 ? `Playable, but don't expect a smooth ${target}.` : "It will start, but expect heavy stutter.";
 }
 
 const card = "rounded-2xl border border-border bg-surface";
@@ -62,10 +64,12 @@ export function Verdict({ game, estimate: e }: { game: GameDetails; estimate: Es
             {e.fps && e.tier !== "none" && (
               <div className="text-right">
                 <p className="font-mono text-2xl font-semibold">
-                  {e.fps.low}–{e.fps.high}
+                  {e.fps.low === e.fps.high ? e.fps.high : `${e.fps.low}–${e.fps.high}`}
                   <span className="ml-1 text-sm font-normal text-muted">fps</span>
                 </p>
-                <p className="text-xs text-muted">estimated at 1080p</p>
+                <p className="text-xs text-muted">
+                  {e.fpsCap ? `game is locked to ${e.fpsCap} fps` : "estimated at 1080p"}
+                </p>
               </div>
             )}
           </div>
