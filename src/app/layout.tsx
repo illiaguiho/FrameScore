@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FrameScore — Will your PC run it?",
+  title: "FrameScore - Will your PC run it?",
   description: "Search any PC game and see how well it will run on your hardware, with tips to make it run better.",
 };
 
