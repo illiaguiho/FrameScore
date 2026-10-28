@@ -60,7 +60,38 @@ body {
   animation: rise 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
+/* Logo: four bars that breathe like a live frame-time graph; livelier on hover. */
+.logo-bars {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 15px;
+}
+
+.logo-bars i {
+  width: 3px;
+  border-radius: 1px;
+  background: var(--accent);
+  transform-origin: bottom;
+  animation: logo-bar 2.4s ease-in-out infinite;
+}
+
+.logo-bars i:nth-child(1) { height: 45%; animation-delay: -0.3s; }
+.logo-bars i:nth-child(2) { height: 75%; animation-delay: -1.1s; }
+.logo-bars i:nth-child(3) { height: 60%; animation-delay: -0.7s; }
+.logo-bars i:nth-child(4) { height: 100%; animation-delay: -1.6s; }
+
+.logo:hover .logo-bars i { animation-duration: 0.9s; }
+
+.logo-accent { transition: text-shadow 0.3s ease; }
+.logo:hover .logo-accent { text-shadow: 0 0 14px color-mix(in srgb, var(--accent) 55%, transparent); }
+
+@keyframes logo-bar {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(0.6); }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .animate-rise { animation: none; }
+  .animate-rise, .logo-bars i { animation: none; }
   * { transition: none !important; }
 }

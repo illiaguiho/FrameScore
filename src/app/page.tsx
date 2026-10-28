@@ -11,9 +11,16 @@ export default async function Home() {
   return (
     <div className="mx-auto min-h-dvh max-w-6xl px-4 pb-16 sm:px-6">
       <header className="flex items-center justify-between py-5">
-        <span className="text-lg font-semibold tracking-tight">
-          Frame<span className="text-accent">Score</span>
-        </span>
+        {/* A plain link on purpose: a full load clears the current game, while the saved PC stays. */}
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+        <a href="/" className="logo inline-flex items-center gap-2 rounded-md text-lg font-semibold tracking-tight focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent">
+          <span className="logo-bars" aria-hidden>
+            <i /><i /><i /><i />
+          </span>
+          <span>
+            Frame<span className="logo-accent text-accent">Score</span>
+          </span>
+        </a>
         <BlackToggle />
       </header>
 
